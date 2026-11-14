@@ -71,10 +71,10 @@ const DATA={"units": [["1", "Travelling for work", [["1.1", "Business travel", "
 const TRACKS=[["all", "For everyone"], ["it", "IT"], ["pm", "Project managers"], ["design", "Designers"]];
 
 /* Student pages: set STUDENT and ASSIGNED; template shows everything */
-const STUDENT={"name": "Larysa", "track": "all"};            // e.g. {name:"Larysa", track:"all"}
+const STUDENT={"name": "Larysa", "track": "all", "code": "eea83833e26343c1"};            // e.g. {name:"Larysa", track:"all"}
 const ASSIGNED={"1.1": {"track": "all", "pages": ["hw", "extra"]}};
 const SHOW_ALL=true;  // student page: show the whole level, open only assigned lessons           // e.g. {"1.1":"all","1.2":"all"} — null = show all
-const PROGRESS={};
+const PROGRESS={};const COMMENTS={};
 const VARIANTS={"1.1": ["all"]};  // which track versions exist; missing → "all"             // filled from Supabase: {"1.1":"done","1.2":"progress"}
 let track=(STUDENT&&STUDENT.track)||"all";
 const path=(n,t,f)=>`lessons/${n.replace(".","-").toLowerCase()}/${t}/${f}.html`;
@@ -91,7 +91,7 @@ function render(){
    const L3=(t2,lab)=>`<div class="links">${lab?`<span class="vl">${lab}</span>`:""}${PG.map(p=>`<a href="${path(n,t2,p)}">${NM[p]}</a>`).join("")}</div>`;
    const open=ready&&(!ASSIGNED||A);
    const links=open?(cl?L3(tr,"Updated")+L3(tr+"-classic","Classic"):L3(tr,""))+`
-     <div class="st"><span class="dot ${pr==="done"?"d":pr==="progress"?"p":""}"></span>${pr==="done"?"Done":pr==="progress"?"In progress":"Not started"}</div>`
+     <div class="st"><span class="dot ${pr==="done"?"d":pr==="progress"?"p":""}"></span>${pr==="done"?"Done":pr==="progress"?"In progress":"Not started"}${COMMENTS[n]?" · 💬 teacher’s comment":""}</div>`
      :`<div class="soon">Coming soon</div>`;
    return `<div class="ls ${ws?"ws":""}"><div class="lh"><span class="n">${ws?"Workshop "+n.slice(1):n}</span><span class="t">${ws?t.replace("Business workshop: ",""):t}</span></div>
      <div class="lb"><span class="tag ${tag}">${tag==="both"?"Classic + Updated":tag}</span><br>${cl?`<div class="ver"><b>💬 Updated</b>${d}</div><div class="ver cl"><b>✉️ Classic</b>${cl}</div>`:d}</div><div class="lf">${links}</div></div>`}).join("");
@@ -106,6 +106,6 @@ TRACKS.forEach(([k,l])=>{const b=document.createElement("button");b.textContent=
 render();
 /* Progress from Supabase (student pages only) */
 const SB_URL="https://zuegojpfhgigsvyrnymt.supabase.co",SB_KEY="sb_publishable__Xn8xRhne9Hp2ckaXu6xCQ_MOe52bng";
-if(STUDENT){fetch(`${SB_URL}/rest/v1/homework_answers?student=eq.${encodeURIComponent(STUDENT.name)}&select=lesson,submitted`,{headers:{apikey:SB_KEY}})
- .then(r=>r.json()).then(rows=>{rows.forEach(r=>{const m=r.lesson.match(/(\d+\.\d+|W\d+)/);if(m)PROGRESS[m[1]]=r.submitted?"done":"progress"});render()}).catch(()=>{})}
+if(STUDENT&&STUDENT.code){fetch(`${SB_URL}/rest/v1/rpc/get_my_progress`,{method:"POST",headers:{apikey:SB_KEY,"Content-Type":"application/json"},body:JSON.stringify({p_code:STUDENT.code})})
+ .then(r=>r.json()).then(rows=>{(rows||[]).forEach(r=>{const m=r.lesson.match(/(\d+\.\d+|W\d+)/);if(m){PROGRESS[m[1]]=r.submitted?"done":"progress";if(r.has_comment)COMMENTS[m[1]]=1}});render()}).catch(()=>{})}
 </script></body></html>
