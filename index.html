@@ -72,13 +72,13 @@ const TRACKS=[["all", "For everyone"], ["it", "IT"], ["pm", "Project managers"],
 
 /* Student pages: set STUDENT and ASSIGNED; template shows everything */
 const STUDENT={"name": "Larysa", "track": "all", "code": "eea83833e26343c1"};            // e.g. {name:"Larysa", track:"all"}
-const ASSIGNED={"1.1": {"track": "all", "pages": ["lesson", "hw", "extra"]}, "1.2": {"track": "all", "pages": ["flip", "lesson", "hw", "extra", "games"]}};
+const ASSIGNED={"1.1": {"track": "all", "pages": ["lesson", "hw", "extra"]}, "1.2": {"track": "all", "pages": ["flip", "lesson", "hw", "extra", "speak"]}};
 const SHOW_ALL=true;  // student page: show the whole level, open only assigned lessons           // e.g. {"1.1":"all","1.2":"all"} — null = show all
 const PROGRESS={};const COMMENTS={};
 const VARIANTS={"1.1": ["all"]};
 const PAGES={};  // pages ready per lesson in the template; missing → all three  // which track versions exist; missing → "all"             // filled from Supabase: {"1.1":"done","1.2":"progress"}
 let track=(STUDENT&&STUDENT.track)||"all";
-const path=(n,t,f)=>`lessons/${n.replace(".","-").toLowerCase()}/${t}/${f}.html?v=202611211047`;
+const path=(n,t,f)=>`lessons/${n.replace(".","-").toLowerCase()}/${t}/${f}.html?v=202611211052`;
 function render(){
  const box=document.getElementById("units");box.innerHTML="";let tot=0,done=0;
  DATA.units.forEach(([u,title,ls])=>{
@@ -88,7 +88,7 @@ function render(){
    tot++;const pr=PROGRESS[n]||"none";if(pr==="done"){done++;ud++}
    const A=ASSIGNED&&ASSIGNED[n];let tr=A?(A.track||A):track;const PG=(A&&A.pages)||PAGES[n]||["lesson","hw","extra"];if(!(VARIANTS[n]||["all"]).includes(tr))tr="all";const ready=st==="ready";
    const ws=n.startsWith("W")||t.startsWith("Business workshop");
-   const NM={flip:"🏠 Before class",lesson:"Lesson",hw:"Homework",extra:"Extra",games:"Speaking & Games",present:"🎤 Presentation kit"};
+   const NM={flip:"🏠 Before class",lesson:"Lesson",hw:"Homework",extra:"Extra",games:"Speaking & Games",present:"🎤 Presentation kit",speak:"💼 Speaking: business situations"};
    const L3=(t2,lab)=>`<div class="links">${lab?`<span class="vl">${lab}</span>`:""}${PG.map(p=>`<a href="${path(n,t2,p)}">${NM[p]}</a>`).join("")}</div>`;
    const open=ready&&(!ASSIGNED||A);
    const links=open?(cl?L3(tr,"Updated")+L3(tr+"-classic","Classic"):L3(tr,""))+`
