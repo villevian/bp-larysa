@@ -615,7 +615,7 @@ $("bOk").onclick=async()=>{ const v=$("pw").value.trim(), err=$("pwErr");
  if(!v){ err.textContent="Enter your teacher key first."; err.classList.add("on"); return; }
  $("bOk").disabled=true;
  try{ const ok=await rpc("admin_check",{p_key:v});
-  if(ok===true){ TKEY=v; $("ov").classList.remove("on");
+  if(ok===true){ TKEY=v;try{localStorage.setItem("bp_admin_key",v)}catch(e){} $("ov").classList.remove("on");
    try{ applyScores(await rpc("get_my_scores",{p_code:D.student.code})); saveCache(); }catch(e){}
    setTeacher(true); }
   else { err.textContent="Wrong key. Try again."; err.classList.add("on"); } }

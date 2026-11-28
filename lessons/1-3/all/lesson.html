@@ -89,7 +89,7 @@ function teacherView(d){const a=d.answers||{};fill(a);document.body.classList.ad
  if(window.afterFill)afterFill();const post=()=>parent.postMessage({tvHeight:document.documentElement.scrollHeight},"*");post();setTimeout(post,800);setTimeout(post,2500)}
 async function teacherOpen(){status("Teacher view");let k="";try{k=localStorage.getItem("bp_admin_key")||sessionStorage.getItem("tk")||""}catch(e){}
  for(let i=0;i<3;i++){if(!k)k=(prompt("Teacher key")||"").trim();if(!k){status("Teacher view needs the teacher key","err");return}
-  try{const d=await rpc("admin_lesson_view",{p_key:k,p_code:STUDENT_CODE,p_lesson:LESSON});try{sessionStorage.setItem("tk",k)}catch(e){}teacherView(d||{});addMarks(k,(d&&d.marks)||[]);return}
+  try{const d=await rpc("admin_lesson_view",{p_key:k,p_code:STUDENT_CODE,p_lesson:LESSON});try{sessionStorage.setItem("tk",k);localStorage.setItem("bp_admin_key",k)}catch(e){}teacherView(d||{});addMarks(k,(d&&d.marks)||[]);return}
   catch(e){if(!/wrong teacher key/.test(e.message)){status("Teacher view: "+e.message,"err");return}k=""}}}
 async function start(){let a=null;if(TEACH){teacherOpen();return}if(VIEW){status("Teacher view");addEventListener("message",e=>{if(e.data&&e.data.tv)teacherView(e.data.tv)});parent.postMessage({tvReady:1},"*");return}if(STUDENT_CODE){try{const r=await rpc("get_my_hw",{p_code:STUDENT_CODE,p_lesson:LESSON});const d=r&&r[0];
  if(d){student=d.name;if(d.answers){a=d.answers;submitted=!!d.submitted;sentBy=a._sent||(submitted?"button":"");if(sentBy==="button")$("done").style.display="block";updSubmit()}if(d.teacher_comment){$("tcomt").textContent=d.teacher_comment;$("tcom").style.display="block"}}}catch(e){}}
@@ -183,26 +183,55 @@ function goStep(b){if(!b)return;b.click();setTimeout(()=>{const s=document.query
    const res=document.getElementById("r_"+p);if(res)res.textContent="";if(typeof ECT!=="undefined")Object.keys(ECT).forEach(k=>{if(pref(k)===p)delete ECT[k]});
    if(typeof navUpd==="function")navUpd();const first=els.find(e=>e.type!=="radio");if(first)first.focus();if(typeof later==="function")later()};
   b.after(r)})})();
-function addMarks(key,marks){if(!STUDENT_CODE||document.querySelector(".mk"))return;const M={};marks.forEach(m=>M[m.ex]=m);
- const st=document.createElement("style");st.textContent=".mk{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:14px 0 6px;padding:8px 12px;border:1.5px dashed #9b8cf0;border-radius:10px;background:#f6f4ff;font-size:14px}.mk b.l{color:#5b4bd6;min-width:34px}.mk button{border:1.5px solid #c9c0f7;background:#fff;border-radius:999px;padding:6px 14px;min-height:40px;cursor:pointer;font:inherit;font-size:14px}.mk button.on{background:#2e7d4f;border-color:#2e7d4f;color:#fff}.mk .rt{display:inline-flex;gap:4px;align-items:center}.mk .rt button{width:40px;padding:0;font-weight:600}.mk .rt button.on{background:#5b4bd6;border-color:#5b4bd6;color:#fff}.mk input{font:inherit;font-size:14px;border:1.5px solid #d6d0f5;border-radius:8px;padding:5px 8px;min-height:40px}.mk select.sk{font:inherit;font-size:14px;border:1.5px solid #d6d0f5;border-radius:8px;padding:5px 8px;min-height:40px;background:#fff}.mk .nt{flex:1;min-width:180px}.mk .s{color:#6d6e70;font-size:13px}.mk .s.err{color:#c0392b}";document.head.appendChild(st);
- document.querySelectorAll("section.sec").forEach(sec=>{const ps=[...sec.querySelectorAll("p.ins")].filter(p=>p.querySelector("b.x"));
-  ps.forEach((p,i)=>{const x=p.querySelector("b.x"),lt=x.nextElementSibling&&x.nextElementSibling.tagName==="B"&&/^[A-H]$/.test(x.nextElementSibling.textContent.trim())?x.nextElementSibling.textContent.trim():"";
-   const ex=x.textContent.trim()+lt;if(sec.querySelector('.mk[data-ex="'+ex+'"]'))return;
+function addMarks(key,marks){if(!STUDENT_CODE||document.getElementById("tdock"))return;const M={};(marks||[]).forEach(m=>M[m.ex]=m);
+ const SK={speaking:"Speaking",listening:"Listening",vocabulary:"Vocabulary",grammar:"Grammar",reading:"Reading",writing:"Writing",pronunciation:"Pronunciation"};
+ const st=document.createElement("style");st.textContent="#tdock{position:fixed;right:12px;top:76px;width:262px;max-height:calc(100vh - 96px);overflow:auto;background:#fbfaff;border:1.5px solid #9b8cf0;border-radius:14px;box-shadow:0 6px 24px rgba(60,40,160,.12);z-index:60;font:14px 'Fira Sans',system-ui,sans-serif;color:#2a2a35}#tdock .hd{display:flex;align-items:center;gap:6px;padding:10px 12px;background:#efeaff;border-radius:12px 12px 0 0;font-weight:600;color:#4a3bc4;position:sticky;top:0}#tdock .hd span{flex:1}#tdock .hd button{border:0;background:none;font-size:18px;cursor:pointer;color:#4a3bc4;min-width:32px;min-height:32px}#tdock.min .bd{display:none}#tdock .bd{padding:6px 12px 12px}#tdock .ex{border-top:1px dashed #d6d0f5;padding:10px 0}#tdock .ex:first-child{border-top:0}#tdock .et{font-weight:600;color:#4a3bc4;margin-bottom:6px;font-size:13.5px;line-height:1.3}#tdock .et small{display:block;font-weight:400;color:#6d6e70}#tdock .sr{display:flex;align-items:center;justify-content:space-between;margin:5px 0;gap:8px}#tdock select{font:inherit;font-size:14px;border:1.5px solid #d6d0f5;border-radius:8px;padding:4px 6px;min-height:36px;background:#fff}#tdock .sr select{width:72px}#tdock .add{width:100%;color:#6d6e70}#tdock .cf{margin-top:8px;width:100%;min-height:40px;border:0;border-radius:10px;background:#5b4bd6;color:#fff;font-weight:600;font-size:14px;font-family:inherit;cursor:pointer}#tdock .ex.ok .cf{background:#2e7d4f}#tdock .s{font-size:12.5px;color:#6d6e70;margin-top:4px;min-height:14px}#tdock .s.err{color:#c0392b}#tdock .none{color:#6d6e70;padding:8px 0}#tdock .stp{margin-top:10px;width:100%;min-height:40px;border:1.5px solid #2e7d4f;border-radius:10px;background:#fff;color:#2e7d4f;font-weight:600;font-size:14px;font-family:inherit;cursor:pointer}#tdock .stp.ok{background:#2e7d4f;color:#fff}nav button.tdn{background:#2e7d4f!important;border-color:#2e7d4f!important;color:#fff!important}nav button.tdn:after{content:' ✓';font-size:13px}.tnext{font-size:17px!important;padding:10px 22px!important;min-height:44px;margin-right:10px;background:#2e7d4f!important;border-color:#2e7d4f!important;color:#fff!important}@media(min-width:1000px){body.tdk{padding-right:286px}}@media(max-width:999px){#tdock{top:auto;bottom:10px;max-height:55vh}}";document.head.appendChild(st);
+ const nb=[...document.querySelectorAll("nav button[data-s]")];
+ const stepEx=b=>"step "+b.textContent.replace(/✓/g,"").trim();
+ const save=(ex,done,score,max)=>rpc("admin_mark",{p_key:key,p_code:STUDENT_CODE,p_lesson:LESSON,p_ex:ex,p_done:done,p_score:score,p_max:max,p_note:""});
+ nb.forEach(b=>{const m=M[stepEx(b)];if(m&&m.done)b.classList.add("tdn")});
+ const LS=LESSON.toLowerCase();
+ function skills(sec,p,els){const txt=(p.textContent||"").toLowerCase();let bs=null;for(let q=p;q;q=q.previousElementSibling){if(q.matches&&q.matches(".bsec")){bs=q;break}}const h=((bs||sec.querySelector(".bsec")||{}).textContent||"").toLowerCase();
+  const media=els.some(e=>e.matches&&(e.matches("iframe,audio,.vbox,.audio")||e.querySelector&&e.querySelector("iframe,audio,.vbox")))||/video|listen|audio|watch/.test(h+" "+txt);
+  const S=new Set();if(media)S.add("listening");
+  if(/vocab|word|functional|lexical|phrase|expression/.test(h)||/word|phrase|expression|match|collocation/.test(txt))S.add("vocabulary");
+  if(/grammar|review/.test(h)||/grammar|review/.test(LS)||/correct form|tense|verb form/.test(txt))S.add("grammar");
+  if(/read|article/.test(h)||/\bread\b|article|text/.test(txt))S.add("reading");
+  if(/writ/.test(h)||/\bwrite\b|message|email/.test(txt))S.add("writing");
+  if(/pronunc/.test(h+" "+txt))S.add("pronunciation");
+  if(/speaking|situation|task|lead-in|role/.test(h)||/speaking/.test(LS)||/pairs|discuss|tell |talk|say|ask|answer|role-?play|explain/.test(txt))S.add("speaking");
+  if(!S.size)S.add("speaking");return [...S]}
+ // collect exercises per section
+ const EX={};document.querySelectorAll("section.sec").forEach(sec=>{const ps=[...sec.querySelectorAll("p.ins")].filter(p=>p.querySelector("b.x"));EX[sec.id]=ps.map((p,i)=>{const x=p.querySelector("b.x"),lt=x.nextElementSibling&&x.nextElementSibling.tagName==="B"&&/^[A-H]$/.test(x.nextElementSibling.textContent.trim())?x.nextElementSibling.textContent.trim():"";
    const nxt=ps[i+1]||null,els=[];let e=p;while(e&&e!==nxt){if(e.nodeType===1)els.push(e);e=e.nextElementSibling;if(e&&e.matches&&e.matches(".nextbar"))break}
-   const keys=[...new Set(els.flatMap(el=>[...(el.matches("[data-k]")?[el]:[]),...el.querySelectorAll("[data-k]")]).map(el=>el.dataset.k).filter(k=>KEY[k]))];
-   const a=collect();let ok=0;keys.forEach(k=>{if(a[k]!=null&&okv(k,a[k]))ok++});
-   const SK=[["speaking","Speaking"],["listening","Listening"],["vocabulary","Vocabulary"],["grammar","Grammar"],["reading","Reading"],["writing","Writing"],["pronunciation","Pronunciation"]];let bs=null;for(let q=p;q;q=q.previousElementSibling){if(q.matches&&q.matches(".bsec")){bs=q;break}}const bt=((bs||sec.querySelector(".bsec")||{}).textContent||"").toLowerCase()+" | "+LESSON.toLowerCase();const h=bt.split(" | ")[0];const pt=(p.textContent||"").toLowerCase();const guess=/speaking/.test(LESSON.toLowerCase())||/situation|speaking|task|lead-in|discuss|role/.test(h)||/work in pairs|in pairs|discuss|tell your|role-?play/.test(pt)&&!/write|listen|watch|read/.test(pt)?"speaking":/review|grammar/.test(LESSON.toLowerCase())?"grammar":/pronunc/.test(h)?"pronunciation":/video|listen|audio/.test(h)?"listening":/read|article/.test(h)?"reading":/grammar|review/.test(h)?"grammar":/writ|email|message/.test(h)?"writing":/vocab|word|functional|lexical|phrase/.test(h)?"vocabulary":"speaking";const m0=M[ex]||{},nm=/^\[(\w+)\]\s?/.exec(m0.note||""),m=Object.assign({},m0,{note:nm?(m0.note||"").slice(nm[0].length):m0.note}),sk=nm?nm[1]:guess,r0=(m.max==5&&m.score!=null)?Number(m.score):null;
-   const bar=document.createElement("div");bar.className="mk";bar.dataset.ex=ex;
-   bar.innerHTML=`<b class="l">${ex}</b><button type="button" class="dn${m.done?" on":""}">${m.done?"✓ Done in class":"Mark done"}</button><select class="sk" aria-label="Skill">${SK.map(([k,n])=>`<option value="${k}"${k===sk?" selected":""}>${n}</option>`).join("")}</select><span class="rt">${[1,2,3,4,5].map(v=>`<button type="button" data-v="${v}"${r0===v?' class="on"':""} aria-label="${v} of 5">${v}</button>`).join("")}</span><input class="nt" value="${(m.note||"").replace(/"/g,"&quot;")}" placeholder="Note for you (student doesn't see it)" aria-label="Note"><span class="s">${keys.length?"auto check: "+ok+"/"+keys.length:""}${m.at?" · saved "+new Date(m.at).toLocaleDateString("en-GB",{day:"numeric",month:"short"}):""}</span>`;
-   (nxt||sec.querySelector(".nextbar")||null)?(nxt||sec.querySelector(".nextbar")).before(bar):sec.appendChild(bar);
-   const rating=()=>{const b=bar.querySelector(".rt button.on");return b?Number(b.dataset.v):null};
-   let t=null;const send=()=>{clearTimeout(t);t=setTimeout(async()=>{const s=bar.querySelector(".s");
-     try{await rpc("admin_mark",{p_key:key,p_code:STUDENT_CODE,p_lesson:LESSON,p_ex:ex,p_done:bar.querySelector(".dn").classList.contains("on"),p_score:rating(),p_max:5,p_note:"["+bar.querySelector(".sk").value+"] "+bar.querySelector(".nt").value});s.className="s";s.textContent="saved ✓ "+new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}
-     catch(e){s.className="s err";s.textContent="not saved: "+e.message}},500)};
-   const setDone=on=>{const b=bar.querySelector(".dn");b.classList.toggle("on",on);b.textContent=on?"✓ Done in class":"Mark done"};
-   bar.querySelector(".dn").onclick=()=>{setDone(!bar.querySelector(".dn").classList.contains("on"));send()};
-   bar.querySelectorAll(".rt button").forEach(b=>b.onclick=()=>{const was=b.classList.contains("on");bar.querySelectorAll(".rt button").forEach(x=>x.classList.remove("on"));if(!was){b.classList.add("on");setDone(true)}send()});
-   bar.querySelector(".nt").addEventListener("input",send);bar.querySelector(".sk").addEventListener("change",send)})});
+   const id=x.textContent.trim()+lt;const sk=skills(sec,p,els);Object.keys(M).forEach(k=>{if(k.startsWith(id+"|")){const s=k.split("|")[1];if(SK[s]&&!sk.includes(s))sk.push(s)}});
+   return {id,sk,title:(p.textContent||"").replace(/^\s*\d+\s*[A-H]?\s*/,"").trim().slice(0,70)}})});
+ const dock=document.createElement("div");dock.id="tdock";dock.innerHTML='<div class="hd">👩‍🏫<span id="tdh">Teacher</span><button type="button" title="Hide / show" id="tdm">–</button></div><div class="bd" id="tdb"></div>';document.body.appendChild(dock);document.body.classList.add("tdk");
+ dock.querySelector("#tdm").onclick=()=>{dock.classList.toggle("min");document.body.classList.toggle("tdk",!dock.classList.contains("min"));dock.querySelector("#tdm").textContent=dock.classList.contains("min")?"+":"–"};
+ const opt=v=>'<option value="">–</option>'+[1,2,3,4,5].map(n=>`<option${n===v?" selected":""}>${n}</option>`).join("");
+ let cur=null;
+ function render(){const sec=document.querySelector("section.sec.on");if(!sec||sec.id===cur)return;cur=sec.id;const b=nb.find(x=>x.dataset.s===sec.id);
+  dock.querySelector("#tdh").textContent="Teacher · Step "+(b?b.textContent.replace(/✓/g,"").trim():"");const L=EX[sec.id]||[];
+  const body=dock.querySelector("#tdb");body.innerHTML=(L.length?L.map(e=>{const done=M[e.id]&&M[e.id].done;return `<div class="ex${done?" ok":""}" data-ex="${e.id}"><div class="et">${e.id}<small>${e.title.replace(/</g,"&lt;")}</small></div>`+
+    e.sk.map(s=>{const m=M[e.id+"|"+s];return `<div class="sr" data-sk="${s}"><span>${SK[s]}</span><select aria-label="${SK[s]}">${opt(m&&m.score!=null?Number(m.score):null)}</select></div>`}).join("")+
+    `<select class="add" aria-label="Add skill"><option value="">+ add skill</option>${Object.keys(SK).filter(s=>!e.sk.includes(s)).map(s=>`<option value="${s}">${SK[s]}</option>`).join("")}</select><button type="button" class="cf">${done?"✓ Done":"Confirm · Done"}</button><div class="s"></div></div>`}).join(""):'<div class="none">No exercises to rate in this step.</div>')+
+    (b?`<button type="button" class="stp${b.classList.contains("tdn")?" ok":""}">${b.classList.contains("tdn")?"✓ Step done":"✓ Mark step done"}</button>`:"");
+  body.querySelectorAll(".ex").forEach(x=>{const e=L.find(z=>z.id===x.dataset.ex);
+   x.querySelector(".add").onchange=ev=>{const s=ev.target.value;if(!s)return;e.sk.push(s);cur=null;render()};
+   x.querySelector(".cf").onclick=async()=>{const sm=x.querySelector(".s");sm.className="s";sm.textContent="saving…";
+    try{for(const r of x.querySelectorAll(".sr")){const v=r.querySelector("select").value;const k=e.id+"|"+r.dataset.sk;if(v!==""||M[k]){const n=v===""?null:Number(v);await save(k,n!=null,n,5);M[k]={done:n!=null,score:n,max:5}}}
+     await save(e.id,true,null,null);M[e.id]={done:true};x.classList.add("ok");x.querySelector(".cf").textContent="✓ Done";sm.textContent="saved "+new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}
+    catch(er){sm.className="s err";sm.textContent="not saved: "+er.message}}});
+  const sb=body.querySelector(".stp");if(sb)sb.onclick=()=>stepDone(b,false)}
+ async function stepDone(b,go){if(!b)return;const was=b.classList.contains("tdn");try{await save(stepEx(b),true,null,null);b.classList.add("tdn");M[stepEx(b)]={done:true};cur=null;render()}catch(er){alert("Not saved: "+er.message);return}
+  if(go){const i=nb.indexOf(b);if(nb[i+1])goStep(nb[i+1])}}
+ // "Done · Next step" next to every Next step button, and at the end of the last step
+ nb.forEach((b,i)=>{const sec=document.getElementById(b.dataset.s);if(!sec)return;const nx=sec.querySelector(".nextbar");const t=document.createElement("button");t.type="button";t.className="btn tnext";
+  if(nx&&nb[i+1]){t.textContent="✓ Done · Next step";t.onclick=()=>stepDone(b,true);nx.insertBefore(t,nx.firstChild)}
+  else{t.textContent="✓ Step done";t.onclick=()=>stepDone(b,false);const d=document.createElement("div");d.style.cssText="margin:28px 0 6px;text-align:right";d.appendChild(t);sec.appendChild(d)}});
+ render();setInterval(render,400);
  const post=()=>parent.postMessage({tvHeight:document.documentElement.scrollHeight},"*");post();setTimeout(post,500)}
-start();
+async function autoTeach(){if(VIEW||!STUDENT_CODE)return;let k="";try{k=localStorage.getItem("bp_admin_key")||sessionStorage.getItem("tk")||""}catch(e){}if(!k)return;
+ try{const d=await rpc("admin_lesson_view",{p_key:k,p_code:STUDENT_CODE,p_lesson:LESSON});addMarks(k,(d&&d.marks)||[])}catch(e){}}
+start();autoTeach();
 </script><script src="https://villevian.github.io/bp-admin/vocab-kit.js" defer></script></body></html>
